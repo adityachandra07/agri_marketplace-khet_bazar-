@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Dashboard — KhetBazaar</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{background:var(--mist);}
+.dash-layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+.sidebar{background:linear-gradient(180deg,#1a2a4a,#2D1B0E);color:#fff;padding:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-brand{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,.1);}
+.sb-brand .logo{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;color:var(--gold);}
+.sb-brand .role{font-size:.72rem;color:rgba(255,255,255,.45);margin-top:2px;text-transform:uppercase;letter-spacing:1px;}
+.sb-nav{padding:12px 0;}
+.sb-link{display:flex;align-items:center;gap:11px;padding:11px 20px;color:rgba(255,255,255,.72);text-decoration:none;font-size:.88rem;font-weight:500;transition:all .2s;cursor:pointer;border:none;background:none;width:100%;text-align:left;}
+.sb-link:hover,.sb-link.active{background:rgba(255,255,255,.11);color:#fff;}
+.sb-link .si{font-size:1.05rem;width:20px;}
+.sb-section{padding:7px 20px;font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.3);margin-top:6px;}
+.main-area{padding:0;}
+.top-bar{background:#fff;padding:14px 26px;border-bottom:1px solid var(--mist);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.top-bar h2{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:900;color:var(--soil);}
+.content{padding:24px;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+/* Stat cards */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;}
+.stat-box{background:#fff;border-radius:14px;padding:18px 20px;border:1px solid var(--mist);}
+.stat-box .sval{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:900;}
+.stat-box .slbl{font-size:.78rem;color:var(--sub);margin-top:2px;}
+.stat-box .sicon{float:right;font-size:1.6rem;margin-top:-2px;}
+.green{color:var(--leaf);}.blue{color:#1565C0;}.orange{color:var(--warn);}.red{color:var(--danger);}.purple{color:var(--purple);}
+/* Tables */
+.tbl-wrap{background:#fff;border-radius:16px;border:1px solid var(--mist);overflow:hidden;}
+.tbl-head{padding:16px 20px;border-bottom:1px solid var(--mist);display:flex;align-items:center;justify-content:space-between;}
+.tbl-head h3{font-family:'Playfair Display',serif;font-weight:900;color:var(--soil);}
+/* Product approval cards */
+.appr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+.appr-card{background:#fff;border-radius:16px;border:1px solid var(--mist);overflow:hidden;}
+.appr-img{height:130px;background:var(--mist);display:flex;align-items:center;justify-content:center;font-size:2.8rem;overflow:hidden;position:relative;}
+.appr-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.appr-body{padding:14px 16px;}
+.appr-name{font-weight:700;color:var(--soil);margin-bottom:3px;}
+.appr-meta{font-size:.8rem;color:#999;margin-bottom:10px;}
+.appr-price{font-family:'Playfair Display',serif;font-weight:900;color:var(--leaf);margin-bottom:10px;}
+.appr-btns{display:flex;gap:8px;}
+/* User rows */
+.user-row td:first-child{font-weight:700;}
+.toggle-btn{border:none;border-radius:16px;padding:4px 12px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.toggle-active{background:rgba(42,107,42,.12);color:var(--leaf);}
+.toggle-inactive{background:rgba(229,57,53,.12);color:var(--danger);}
+/* Recent orders */
+.recent-card{background:#fff;border-radius:14px;border:1px solid var(--mist);padding:18px 20px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+@media(max-width:768px){.dash-layout{grid-template-columns:1fr;}.sidebar{position:relative;height:auto;}}
+</style>
+</head>
+<body>
+<div class="dash-layout">
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sb-brand">
+    <div class="logo">🛡️ KhetBazaar</div>
+    <div class="role">Admin Control Panel</div>
+    <div style="margin-top:10px;font-size:.82rem;color:rgba(255,255,255,.6)" id="sbUser"></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Dashboard</div>
+    <button class="sb-link active" onclick="show('overview')"><span class="si">📊</span> Overview</button>
+    <div class="sb-section">Products</div>
+    <button class="sb-link" onclick="show('pending')"><span class="si">⏳</span> Pending Approval</button>
+    <button class="sb-link" onclick="show('allproducts')"><span class="si">🌾</span> All Products</button>
+    <div class="sb-section">Users</div>
+    <button class="sb-link" onclick="show('buyers')"><span class="si">🛒</span> Buyers</button>
+    <button class="sb-link" onclick="show('sellers')"><span class="si">👨‍🌾</span> Sellers</button>
+    <div class="sb-section">Reports</div>
+    <button class="sb-link" onclick="show('orders')"><span class="si">📦</span> All Orders</button>
+    <button class="sb-link" onclick="show('ailogs')"><span class="si">🤖</span> AI Scan Logs</button>
+    <div class="sb-section">Account</div>
+    <a href="marketplace.html" class="sb-link"><span class="si">🛒</span> Marketplace</a>
+    <button class="sb-link" onclick="Auth.logout()"><span class="si">🚪</span> Logout</button>
+  </nav>
+</div>
+
+<div class="main-area">
+  <div class="top-bar">
+    <h2 id="pageTitle">Overview</h2>
+    <div style="font-size:.82rem;color:var(--sub)" id="clock"></div>
+  </div>
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="stat-grid">
+        <div class="stat-box"><span class="sicon">🛒</span><div class="sval green" id="st-buyers">–</div><div class="slbl">Total Buyers</div></div>
+        <div class="stat-box"><span class="sicon">👨‍🌾</span><div class="sval blue" id="st-sellers">–</div><div class="slbl">Total Sellers</div></div>
+        <div class="stat-box"><span class="sicon">🌾</span><div class="sval green" id="st-products">–</div><div class="slbl">Total Products</div></div>
+        <div class="stat-box"><span class="sicon">⏳</span><div class="sval orange" id="st-pending">–</div><div class="slbl">Pending Approval</div></div>
+        <div class="stat-box"><span class="sicon">📦</span><div class="sval blue" id="st-orders">–</div><div class="slbl">Total Orders</div></div>
+        <div class="stat-box"><span class="sicon">💰</span><div class="sval green" id="st-revenue">–</div><div class="slbl">Total Revenue</div></div>
+        <div class="stat-box"><span class="sicon">🤖</span><div class="sval purple" id="st-scans">–</div><div class="slbl">AI Scans Done</div></div>
+        <div class="stat-box"><span class="sicon">🦠</span><div class="sval red" id="st-diseased">–</div><div class="slbl">Diseased Crops</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-head"><h3>Recent Orders</h3></div>
+        <div id="recentOrders" style="padding:4px 0"></div>
+      </div>
+    </div>
+
+    <!-- PENDING APPROVAL -->
+    <div class="tab-panel" id="tab-pending">
+      <div style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center">
+        <span id="pendCount" style="color:var(--sub)"></span>
+        <button class="btn btn-green btn-sm" onclick="loadPending()">🔄 Refresh</button>
+      </div>
+      <div class="appr-grid" id="pendGrid"><div class="loading-center"><span class="spinner spinner-dark spinner-lg"></span></div></div>
+    </div>
+
+    <!-- ALL PRODUCTS -->
+    <div class="tab-panel" id="tab-allproducts">
+      <div class="tbl-wrap">
+        <div class="tbl-head"><h3>All Products</h3><button class="btn btn-grey btn-sm" onclick="loadAllProducts()">🔄 Refresh</button></div>
+        <table class="tbl"><thead><tr><th>ID</th><th>Name</th><th>Seller</th><th>Price</th><th>Status</th><th>AI Status</th><th>Action</th></tr></thead>
+        <tbody id="allProdTbody"><tr><td colspan="7" class="loading-center"><span class="spinner spinner-dark"></span></td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- BUYERS -->
+    <div class="tab-panel" id="tab-buyers">
+      <div class="tbl-wrap">
+        <div class="tbl-head"><h3>Registered Buyers</h3><button class="btn btn-grey btn-sm" onclick="loadUsers('buyer')">🔄 Refresh</button></div>
+        <table class="tbl"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="buyerTbody"><tr><td colspan="7" class="loading-center"><span class="spinner spinner-dark"></span></td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- SELLERS -->
+    <div class="tab-panel" id="tab-sellers">
+      <div class="tbl-wrap">
+        <div class="tbl-head"><h3>Registered Sellers</h3><button class="btn btn-grey btn-sm" onclick="loadUsers('seller','sellerTbody')">🔄 Refresh</button></div>
+        <table class="tbl"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="sellerTbody"><tr><td colspan="7" class="loading-center"><span class="spinner spinner-dark"></span></td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ALL ORDERS -->
+    <div class="tab-panel" id="tab-orders">
+      <div class="tbl-wrap">
+        <div class="tbl-head"><h3>All Orders</h3><button class="btn btn-grey btn-sm" onclick="loadAllOrders()">🔄 Refresh</button></div>
+        <table class="tbl"><thead><tr><th>Order #</th><th>Buyer</th><th>Amount</th><th>Payment</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody id="allOrderTbody"><tr><td colspan="7" class="loading-center"><span class="spinner spinner-dark"></span></td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- AI LOGS -->
+    <div class="tab-panel" id="tab-ailogs">
+      <div class="tbl-wrap">
+        <div class="tbl-head"><h3>AI Scan Logs</h3><button class="btn btn-grey btn-sm" onclick="loadAiLogs()">🔄 Refresh</button></div>
+        <table class="tbl"><thead><tr><th>ID</th><th>Product</th><th>Scanned By</th><th>Result</th><th>Confidence</th><th>Disease</th><th>Grade</th><th>Date</th></tr></thead>
+        <tbody id="aiLogTbody"><tr><td colspan="8" class="loading-center"><span class="spinner spinner-dark"></span></td></tr></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+<script src="js/app.js"></script>
+<script>
+const EMOJIS={'Vegetables':'🥦','Fruits':'🍎','Grains & Cereals':'🌾','Pulses & Legumes':'🫘','Spices & Herbs':'🌶️','Dairy Products':'🥛','Flowers':'🌸','Seeds':'🌱'};
+
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleString('en-IN');},1000);
+
+async function init(){
+  const u=await Auth.get();
+  if(!u||u.role!=='admin'){window.location.href='login.html?role=admin';return;}
+  document.getElementById('sbUser').textContent='👤 '+u.name;
+  loadStats();loadPending();loadUsers('buyer');loadUsers('seller','sellerTbody');loadAllOrders();loadAllProducts();loadAiLogs();
+}
+
+function show(tab){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));
+  event.currentTarget?.classList.add('active');
+  const titles={overview:'Overview',pending:'Pending Approval',allproducts:'All Products',buyers:'Buyers',sellers:'Sellers',orders:'All Orders',ailogs:'AI Scan Logs'};
+  document.getElementById('pageTitle').textContent=titles[tab]||tab;
+}
+
+async function loadStats(){
+  try{
+    const d=await api('php/admin.php?action=stats');
+    if(d.success){
+      const s=d.stats;
+      document.getElementById('st-buyers').textContent=s.buyers||0;
+      document.getElementById('st-sellers').textContent=s.sellers||0;
+      document.getElementById('st-products').textContent=s.products||0;
+      document.getElementById('st-pending').textContent=s.pending||0;
+      document.getElementById('st-orders').textContent=s.orders||0;
+      document.getElementById('st-revenue').textContent=rupee(s.revenue||0);
+      document.getElementById('st-scans').textContent=s.ai_scans||0;
+      document.getElementById('st-diseased').textContent=s.diseased||0;
+      const ro=document.getElementById('recentOrders');
+      if(s.recent_orders?.length){
+        ro.innerHTML=s.recent_orders.map(o=>`
+          <div class="recent-card">
+            <div><b style="color:var(--soil)">#${o.id} — ${o.buyer_name||'Buyer'}</b><div style="font-size:.82rem;color:#999;margin-top:2px">${fmtDate(o.created_at)}</div></div>
+            <div style="text-align:right"><div style="font-weight:700;color:var(--leaf)">${rupee(o.total_amount)}</div>${statusPill(o.payment_status)}</div>
+          </div>`).join('');
+      }else{ro.innerHTML='<div class="loading-center">No recent orders</div>';}
+    }
+  }catch(e){/* demo */
+    document.getElementById('st-buyers').textContent='3';
+    document.getElementById('st-sellers').textContent='2';
+    document.getElementById('st-products').textContent='8';
+    document.getElementById('st-pending').textContent='2';
+    document.getElementById('st-orders').textContent='5';
+    document.getElementById('st-revenue').textContent='₹4,250';
+    document.getElementById('st-scans').textContent='12';
+    document.getElementById('st-diseased').textContent='2';
+    document.getElementById('recentOrders').innerHTML='<div class="loading-center" style="padding:20px">Connect PHP backend to see live data</div>';
+  }
+}
+
+async function loadPending(){
+  try{
+    const d=await api('php/products.php?action=pending');
+    const prods=d.success?d.products:demoPendingProds();
+    document.getElementById('pendCount').textContent=prods.length+' product(s) awaiting approval';
+    const grid=document.getElementById('pendGrid');
+    if(!prods.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:#999">🎉 No pending approvals!</div>';return;}
+    grid.innerHTML=prods.map(p=>`
+      <div class="appr-card">
+        <div class="appr-img">${p.image?`<img src="${p.image}" alt="${p.name}">`:''}${EMOJIS[p.cat_name]||'🌿'}</div>
+        <div class="appr-body">
+          <div class="appr-name">${p.name}</div>
+          <div class="appr-meta">by ${p.seller_name||'Seller'} · ${p.location||'India'}</div>
+          <div class="appr-price">${rupee(p.price)} / ${p.unit}</div>
+          <div class="appr-btns">
+            <button class="btn btn-green btn-sm" onclick="setStatus(${p.id},'approved',this)">✅ Approve</button>
+            <button class="btn btn-danger btn-sm" onclick="setStatus(${p.id},'rejected',this)">❌ Reject</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+function demoPendingProds(){
+  return [{id:9,name:'Demo Crop 1',price:50,unit:'kg',seller_name:'Test Seller',location:'Delhi',cat_name:'Vegetables',image:''},{id:10,name:'Demo Crop 2',price:90,unit:'kg',seller_name:'Farm Fresh',location:'Mumbai',cat_name:'Fruits',image:''}];
+}
+
+async function setStatus(id,status,btn){
+  btn.disabled=true;
+  const d=await api('php/products.php',{action:'set_status',id,status});
+  Toast.show(d.success?'✅ Product '+status:'✅ Status updated (demo)');
+  loadPending();loadStats();
+}
+
+async function loadAllProducts(){
+  try{
+    const d=await api('php/products.php?action=list');
+    const prods=d.success?d.products:[];
+    document.getElementById('allProdTbody').innerHTML=prods.length?prods.map(p=>`<tr>
+      <td>#${p.id}</td><td>${p.name}</td><td>${p.seller_name||'–'}</td>
+      <td>${rupee(p.price)}/${p.unit}</td>
+      <td>${statusPill(p.status)}</td><td>${aiBadge(p.ai_scan_status)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="adminDelProd(${p.id},this)">Del</button></td>
+    </tr>`).join(''):'<tr><td colspan="7" class="loading-center">No products</td></tr>';
+  }catch(e){document.getElementById('allProdTbody').innerHTML='<tr><td colspan="7" class="loading-center">Connect PHP backend</td></tr>';}
+}
+
+async function adminDelProd(id,btn){
+  if(!confirm('Delete product #'+id+'?'))return;
+  btn.disabled=true;
+  await api('php/products.php',{action:'delete',id});
+  Toast.show('🗑️ Product deleted');loadAllProducts();
+}
+
+async function loadUsers(role,tbodyId){
+  const tid=tbodyId||(role==='buyer'?'buyerTbody':'sellerTbody');
+  try{
+    const d=await api('php/admin.php?action=users&role='+role);
+    const users=d.success?d.users:demoUsers(role);
+    document.getElementById(tid).innerHTML=users.length?users.map(u=>`<tr class="user-row">
+      <td>#${u.id}</td><td>${u.name}</td><td>${u.email}</td>
+      <td>${u.phone||'–'}</td><td>${fmtDate(u.created_at)}</td>
+      <td>${u.is_active==1?'<span class="badge badge-green">Active</span>':'<span class="badge badge-danger">Inactive</span>'}</td>
+      <td>
+        <button class="toggle-btn ${u.is_active==1?'toggle-active':'toggle-inactive'}" onclick="toggleUser(${u.id},this)">${u.is_active==1?'Deactivate':'Activate'}</button>
+      </td>
+    </tr>`).join(''):'<tr><td colspan="7" class="loading-center">No '+role+'s found</td></tr>';
+  }catch(e){document.getElementById(tid).innerHTML='<tr><td colspan="7" class="loading-center">Connect PHP backend</td></tr>';}
+}
+
+function demoUsers(role){
+  return role==='buyer'
+    ?[{id:3,name:'Priya Sharma',email:'buyer@khetbazaar.com',phone:'9812345678',created_at:'2025-01-10',is_active:1}]
+    :[{id:2,name:'Raman Singh',email:'seller@khetbazaar.com',phone:'9876543210',created_at:'2025-01-05',is_active:1}];
+}
+
+async function toggleUser(id,btn){
+  btn.disabled=true;
+  const d=await api('php/admin.php',{action:'toggle_user',id});
+  Toast.show(d.success?'✅ User status updated':'✅ Updated (demo)');
+  loadUsers('buyer');loadUsers('seller','sellerTbody');
+}
+
+async function loadAllOrders(){
+  try{
+    const d=await api('php/orders.php?action=all_orders');
+    const orders=d.success?d.orders:[];
+    document.getElementById('allOrderTbody').innerHTML=orders.length?orders.map(o=>`<tr>
+      <td><b>#${o.id}</b></td>
+      <td>${o.buyer_name||'–'}</td>
+      <td>${rupee(o.total_amount)}</td>
+      <td>${statusPill(o.payment_status)}</td>
+      <td>${statusPill(o.status)}</td>
+      <td>${fmtDate(o.created_at)}</td>
+      <td>
+        <select class="form-ctrl" style="padding:4px 8px;font-size:.78rem;width:auto" onchange="updOrder(${o.id},this.value)">
+          <option>pending</option><option>confirmed</option><option>shipped</option><option>delivered</option><option>cancelled</option>
+        </select>
+      </td>
+    </tr>`).join(''):'<tr><td colspan="7" class="loading-center">No orders yet</td></tr>';
+  }catch(e){document.getElementById('allOrderTbody').innerHTML='<tr><td colspan="7" class="loading-center">Connect PHP backend</td></tr>';}
+}
+
+async function updOrder(id,status){
+  const d=await api('php/orders.php',{action:'upd_order',id,status});
+  Toast.show(d.success?'✅ Order updated':'✅ Updated (demo)');
+}
+
+async function loadAiLogs(){
+  try{
+    const d=await api('php/admin.php?action=ai_logs');
+    const logs=d.success?d.logs:[];
+    document.getElementById('aiLogTbody').innerHTML=logs.length?logs.map(l=>`<tr>
+      <td>#${l.id}</td>
+      <td>${l.product_name||'–'}</td>
+      <td>${l.scanned_by_name||'–'}</td>
+      <td>${aiBadge(l.result)}</td>
+      <td>${parseFloat(l.confidence||0).toFixed(1)}%</td>
+      <td style="color:var(--danger);font-size:.82rem">${l.disease_name||'–'}</td>
+      <td><span class="badge badge-grey">${l.quality_grade||'–'}</span></td>
+      <td>${fmtDate(l.scanned_at)}</td>
+    </tr>`).join(''):'<tr><td colspan="8" class="loading-center">No scan logs yet</td></tr>';
+  }catch(e){document.getElementById('aiLogTbody').innerHTML='<tr><td colspan="8" class="loading-center">Connect PHP backend</td></tr>';}
+}
+
+init();
+</script>
+</body>
+</html>

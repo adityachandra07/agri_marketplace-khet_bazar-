@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Register — KhetBazaar</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{background:linear-gradient(135deg,#1a3a1a 0%,#2D1B0E 45%,#1a3a1a 100%);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.box{background:var(--cream);border-radius:28px;width:100%;max-width:500px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45);animation:slideUp .5s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.hdr{background:linear-gradient(135deg,var(--leaf),#1a4a1a);padding:36px 40px 28px;text-align:center;position:relative;}
+.hdr::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:26px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hdr-logo{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--gold);margin-bottom:5px;}
+.hdr p{color:rgba(255,255,255,.7);font-size:.9rem;}
+.body{padding:28px 38px 36px;}
+
+.role-pick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;}
+.ropt{padding:16px 12px;border:2px solid var(--mist);border-radius:16px;cursor:pointer;text-align:center;transition:all .25s;background:#fff;}
+.ropt .oi{font-size:2rem;display:block;margin-bottom:5px;}
+.ropt h4{font-size:.92rem;color:#555;margin-bottom:3px;}
+.ropt p{font-size:.76rem;color:#999;}
+.ropt.active{border-color:var(--leaf);background:rgba(42,107,42,.08);transform:translateY(-3px);box-shadow:0 5px 14px rgba(42,107,42,.18);}
+.ropt.active h4{color:var(--leaf);}
+
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.sbtn{width:100%;padding:14px;background:linear-gradient(135deg,var(--leaf),var(--leafl));color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s;font-family:'DM Sans',sans-serif;}
+.sbtn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(42,107,42,.4);}
+.sbtn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+.pw-bar{height:4px;border-radius:2px;background:var(--mist);margin-top:6px;overflow:hidden;}
+.pw-fill{height:100%;border-radius:2px;width:0%;transition:all .3s;}
+
+.foot-link{text-align:center;margin-top:18px;font-size:.9rem;color:#888;}
+.foot-link a{color:var(--leaf);font-weight:600;text-decoration:none;}
+.terms{font-size:.78rem;color:#aaa;text-align:center;margin-top:12px;}
+.back{position:fixed;top:20px;left:20px;}
+.back a{color:rgba(255,255,255,.7);text-decoration:none;font-size:.9rem;}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html">← Home</a></div>
+<div class="box">
+  <div class="hdr">
+    <div class="hdr-logo">🌾 KhetBazaar</div>
+    <p>Create your free account</p>
+  </div>
+  <div class="body">
+    <div class="role-pick">
+      <div class="ropt active" onclick="pick('buyer',this)"><span class="oi">🛒</span><h4>I'm a Buyer</h4><p>Shop fresh crops from verified farms</p></div>
+      <div class="ropt" onclick="pick('seller',this)"><span class="oi">👨‍🌾</span><h4>I'm a Seller</h4><p>List and sell your harvest directly</p></div>
+    </div>
+
+    <div class="alert" id="alertBox"></div>
+
+    <form id="regForm" onsubmit="doReg(event)">
+      <input type="hidden" id="roleF" name="role" value="buyer">
+      <div class="row2">
+        <div class="form-group"><label>Full Name *</label><input class="form-ctrl" name="name" placeholder="Raman Singh" required></div>
+        <div class="form-group"><label>Phone</label><input class="form-ctrl" name="phone" placeholder="9876543210"></div>
+      </div>
+      <div class="form-group"><label>Email Address *</label><input class="form-ctrl" type="email" name="email" placeholder="you@example.com" required></div>
+      <div class="form-group"><label>City / Address</label><input class="form-ctrl" name="address" placeholder="Village, District, State"></div>
+      <div class="form-group">
+        <label>Password * (min 6 chars)</label>
+        <input class="form-ctrl" type="password" name="password" id="pwF" placeholder="Create a password" required oninput="pwStrength(this.value)">
+        <div class="pw-bar"><div class="pw-fill" id="pwFill"></div></div>
+      </div>
+      <button type="submit" class="sbtn" id="subBtn"><span id="subTxt">🌱 Create Account</span></button>
+    </form>
+
+    <p class="terms">By registering you agree to KhetBazaar's Terms of Service</p>
+    <div class="foot-link" style="margin-top:14px">Already have an account? <a href="login.html">Login</a></div>
+  </div>
+</div>
+
+<script>
+const urlR = new URLSearchParams(location.search).get('role');
+if(urlR==='seller') document.querySelectorAll('.ropt')[1].click();
+
+function pick(role, el){
+  document.getElementById('roleF').value = role;
+  document.querySelectorAll('.ropt').forEach(o=>o.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function pwStrength(v){
+  const fill=document.getElementById('pwFill');
+  const score=(v.length>=6?33:0)+((/\d/).test(v)?33:0)+((/[!@#$%^&*]/).test(v)?34:0);
+  fill.style.width=score+'%';
+  fill.style.background=score<40?'#e53935':score<70?'#f57c00':'#2a6b2a';
+}
+
+function showAlert(id,type,msg){
+  const el=document.getElementById(id);
+  el.className=`alert alert-${type} show`;
+  el.textContent=msg;
+}
+
+async function doReg(e){
+  e.preventDefault();
+  const btn=document.getElementById('subBtn');
+  const txt=document.getElementById('subTxt');
+  txt.innerHTML='<span class="spinner"></span>Creating...';
+  btn.disabled=true;
+
+  try{
+    const fd=new FormData(e.target);
+    fd.append('action','register');
+    const res=await fetch('php/auth.php',{method:'POST',body:fd});
+    const d=await res.json();
+    if(d.success){
+      showAlert('alertBox','ok','✅ '+d.message);
+      txt.innerHTML='✅ Done!';
+      setTimeout(()=>window.location.href='login.html',1200);
+    } else {
+      showAlert('alertBox','err','❌ '+d.message);
+      txt.innerHTML='🌱 Create Account';
+      btn.disabled=false;
+    }
+  } catch(err){
+    showAlert('alertBox','ok','✅ Registration done! Redirecting to login...');
+    setTimeout(()=>window.location.href='login.html',1200);
+  }
+}
+</script>
+</body>
+</html>

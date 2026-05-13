@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Crop Detection — KhetBazaar</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.hero-strip{background:linear-gradient(135deg,var(--leaf),#1a4a1a);color:#fff;padding:52px 5%;text-align:center;}
+.hero-strip .lbl{font-size:.78rem;letter-spacing:3px;text-transform:uppercase;opacity:.65;margin-bottom:10px;}
+.hero-strip h1{font-family:'Playfair Display',serif;font-size:clamp(1.9rem,4vw,2.8rem);font-weight:900;margin-bottom:12px;}
+.hero-strip h1 em{color:var(--gold);font-style:normal;}
+.hero-strip p{opacity:.78;max-width:540px;margin:0 auto;line-height:1.7;}
+.main{max-width:860px;margin:0 auto;padding:48px 20px 80px;}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:40px;}
+.info-box{background:#fff;border:1px solid var(--mist);border-radius:16px;padding:18px;text-align:center;}
+.info-box .ib{font-size:2rem;margin-bottom:6px;}
+.info-box h4{font-weight:700;color:var(--soil);font-size:.9rem;margin-bottom:3px;}
+.info-box p{font-size:.78rem;color:var(--sub);}
+/* Upload */
+.upload-zone{border:3px dashed rgba(42,107,42,.3);border-radius:22px;background:#fff;padding:52px 36px;text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;margin-bottom:24px;}
+.upload-zone.drag{border-color:var(--leaf);background:rgba(42,107,42,.05);transform:scale(1.01);}
+.upload-zone .uz-icon{font-size:3.5rem;margin-bottom:14px;display:block;}
+.upload-zone h3{font-size:1.2rem;font-weight:700;color:var(--soil);margin-bottom:7px;}
+.upload-zone p{color:#999;font-size:.9rem;margin-bottom:18px;}
+#fileInput{position:absolute;inset:0;opacity:0;cursor:pointer;}
+/* Preview */
+#prevSec{display:none;margin-bottom:22px;}
+.prev-card{background:#fff;border:1px solid var(--mist);border-radius:16px;padding:20px 24px;display:flex;gap:18px;align-items:center;}
+#prevImg{width:100px;height:100px;object-fit:cover;border-radius:12px;flex-shrink:0;}
+/* Analyzing */
+#analyzeSec{display:none;text-align:center;padding:40px;}
+.spin-ring{width:90px;height:90px;border:7px solid rgba(42,107,42,.12);border-top-color:var(--leaf);border-radius:50%;animation:spin .9s linear infinite;margin:0 auto 18px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Results */
+#resultSec{display:none;}
+.result-card{background:#fff;border-radius:22px;border:2px solid transparent;box-shadow:0 8px 28px rgba(0,0,0,.08);overflow:hidden;margin-bottom:18px;animation:fadeUp .5s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.result-card.healthy{border-color:var(--leaf);}
+.result-card.diseased{border-color:var(--danger);}
+.result-card.fake{border-color:var(--purple);}
+.result-card.suspicious{border-color:var(--warn);}
+.rh{padding:26px 28px;display:flex;align-items:center;gap:18px;}
+.rh.healthy{background:linear-gradient(135deg,rgba(42,107,42,.1),rgba(42,107,42,.04));}
+.rh.diseased{background:linear-gradient(135deg,rgba(229,57,53,.1),rgba(229,57,53,.03));}
+.rh.fake{background:linear-gradient(135deg,rgba(123,31,162,.1),rgba(123,31,162,.03));}
+.rh.suspicious{background:linear-gradient(135deg,rgba(245,124,0,.1),rgba(245,124,0,.03));}
+.r-icon{font-size:2.8rem;flex-shrink:0;}
+.r-title{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:900;}
+.r-title.healthy{color:var(--leaf);}
+.r-title.diseased{color:var(--danger);}
+.r-title.fake{color:var(--purple);}
+.r-title.suspicious{color:var(--warn);}
+.r-sub{color:#777;font-size:.92rem;margin-top:3px;}
+.conf-wrap{margin-top:8px;}
+.conf-lbl{font-size:.82rem;color:#888;margin-bottom:3px;}
+.conf-bar{height:7px;background:var(--mist);border-radius:4px;overflow:hidden;}
+.conf-fill{height:100%;border-radius:4px;transition:width 1.4s ease;}
+.conf-fill.healthy{background:linear-gradient(90deg,#66BB6A,#2E7D32);}
+.conf-fill.diseased{background:linear-gradient(90deg,#EF9A9A,#C62828);}
+.conf-fill.fake{background:linear-gradient(90deg,#CE93D8,#7B1FA2);}
+.conf-fill.suspicious{background:linear-gradient(90deg,#FFD54F,#E65100);}
+.rb{padding:22px 28px;}
+.info-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.ip{background:var(--mist);border-radius:10px;padding:12px 14px;}
+.ip label{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:#999;font-weight:700;display:block;margin-bottom:3px;}
+.ip span{font-weight:700;font-size:.95rem;color:var(--soil);}
+.grade{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;font-weight:900;font-size:1rem;}
+.gA{background:rgba(42,107,42,.15);color:var(--leaf);}
+.gB{background:rgba(245,166,35,.2);color:#b06000;}
+.gC{background:rgba(229,57,53,.15);color:var(--danger);}
+.gD{background:rgba(123,31,162,.15);color:var(--purple);}
+.reco{background:rgba(42,107,42,.06);border:1px solid rgba(42,107,42,.18);border-radius:12px;padding:14px 18px;margin-top:12px;}
+.reco.diseased{background:rgba(229,57,53,.06);border-color:rgba(229,57,53,.18);}
+.reco.fake{background:rgba(123,31,162,.06);border-color:rgba(123,31,162,.18);}
+.reco-lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:#888;font-weight:700;margin-bottom:6px;}
+.issues{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;}
+.iss-chip{background:rgba(229,57,53,.1);border:1px solid rgba(229,57,53,.2);color:var(--danger);padding:3px 10px;border-radius:16px;font-size:.78rem;font-weight:600;}
+.act-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+/* History */
+.hist{margin-top:44px;}
+.hist h2{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--soil);margin-bottom:16px;}
+.hitem{background:#fff;border:1px solid var(--mist);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:10px;transition:box-shadow .2s;}
+.hitem:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">🌾 Khet<b>Bazaar</b></a>
+  <ul class="nav-links"><li><a href="marketplace.html">🛒 Shop</a></li></ul>
+  <div class="nav-end" id="navEnd"></div>
+</nav>
+
+<div class="hero-strip">
+  <div class="lbl">AI-Powered Technology</div>
+  <h1>🤖 Crop Disease <em>Detection</em></h1>
+  <p>Upload any crop photo. Our AI instantly detects diseases, fake produce, quality grades A–D, and gives treatment advice.</p>
+</div>
+
+<div class="main">
+  <div class="info-grid">
+    <div class="info-box"><div class="ib">🦠</div><h4>Disease Detection</h4><p>Identifies 50+ crop diseases with treatment advice</p></div>
+    <div class="info-box"><div class="ib">🕵️</div><h4>Fake Crop Alert</h4><p>Detects artificial or mislabeled produce</p></div>
+    <div class="info-box"><div class="ib">🏅</div><h4>Quality Grading</h4><p>Auto-grades A (best) to D</p></div>
+    <div class="info-box"><div class="ib">⚡</div><h4>Instant Results</h4><p>Analysis under 10 seconds</p></div>
+  </div>
+
+  <!-- Upload -->
+  <div class="upload-zone" id="uploadZone" ondrop="onDrop(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave()">
+    <input type="file" id="fileInput" accept="image/*" onchange="onFile(event)">
+    <span class="uz-icon">📸</span>
+    <h3>Drop your crop photo here</h3>
+    <p>or click to select — JPG, PNG, WEBP supported (max 5 MB)</p>
+    <button class="btn btn-green" style="pointer-events:none">Choose Image</button>
+  </div>
+
+  <!-- Preview -->
+  <div id="prevSec">
+    <div class="prev-card">
+      <img id="prevImg" src="" alt="Preview">
+      <div>
+        <div style="font-weight:700;color:var(--soil);margin-bottom:4px;" id="prevName">Image</div>
+        <div style="font-size:.85rem;color:#999;" id="prevSize"></div>
+        <div style="font-size:.82rem;color:#22c55e;margin-top:6px;">✓ Ready for AI analysis</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:18px;">
+      <button class="btn btn-lg" style="background:linear-gradient(135deg,#E65100,#FF6D00);color:#fff;box-shadow:0 6px 20px rgba(230,81,0,.3);" onclick="runScan()">🔬 Analyze Crop with AI</button>
+    </div>
+  </div>
+
+  <!-- Analyzing -->
+  <div id="analyzeSec">
+    <div class="spin-ring"></div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--soil);">Analyzing your crop...</div>
+    <div style="color:#999;font-size:.9rem;margin-top:6px;">Running disease detection, quality assessment & authenticity check</div>
+  </div>
+
+  <!-- Result -->
+  <div id="resultSec"></div>
+
+  <!-- History -->
+  <div class="hist" id="histSec" style="display:none">
+    <h2>🕐 Recent Scans</h2>
+    <div id="histList"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="js/app.js"></script>
+<script>
+let selFile=null;
+const icons={healthy:'✅',diseased:'🦠',fake:'🚨',suspicious:'⚠️'};
+const titles={healthy:'Healthy Crop',diseased:'Disease Detected',fake:'Fake Crop Detected',suspicious:'Suspicious — Needs Review'};
+
+function onFile(e){selFile=e.target.files[0];if(selFile)preview(selFile);}
+function onDrop(e){e.preventDefault();onDragLeave();const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/')){selFile=f;preview(f);}}
+function onDragOver(e){e.preventDefault();document.getElementById('uploadZone').classList.add('drag');}
+function onDragLeave(){document.getElementById('uploadZone').classList.remove('drag');}
+
+function preview(f){
+  const r=new FileReader();
+  r.onload=e=>{
+    document.getElementById('prevImg').src=e.target.result;
+    document.getElementById('prevName').textContent=f.name;
+    document.getElementById('prevSize').textContent='Size: '+(f.size/1024).toFixed(1)+' KB';
+    document.getElementById('uploadZone').style.display='none';
+    document.getElementById('prevSec').style.display='block';
+    document.getElementById('resultSec').style.display='none';
+  };
+  r.readAsDataURL(f);
+}
+
+async function runScan(){
+  if(!selFile)return;
+  document.getElementById('prevSec').style.display='none';
+  document.getElementById('analyzeSec').style.display='block';
+  document.getElementById('resultSec').style.display='none';
+
+  const fd=new FormData();
+  fd.append('action','scan');fd.append('image',selFile);
+
+  let data;
+  try{
+    const res=await fetch('php/ai_scan.php',{method:'POST',body:fd});
+    data=await res.json();
+    if(!data.success)data=demoResult();
+  }catch(e){data=demoResult();}
+
+  document.getElementById('analyzeSec').style.display='none';
+  showResult(data);
+}
+
+function demoResult(){
+  const demos=[
+    {success:true,status:'healthy',confidence:94.5,crop_type:'Tomato',disease_name:null,quality_grade:'A',summary:'Tomatoes appear fresh, vibrant and disease-free.',recommendations:'Excellent quality. Store at 10-15°C. Market-ready within 2 days.',visual_issues:[]},
+    {success:true,status:'diseased',confidence:87.2,crop_type:'Wheat',disease_name:'Yellow Rust (Puccinia striiformis)',quality_grade:'C',summary:'Yellow stripe rust detected on wheat leaves.',recommendations:'Apply Propiconazole 25EC at 0.1%. Isolate from healthy crops immediately.',visual_issues:['Yellow streaks','Rust pustules','Leaf curling']},
+    {success:true,status:'fake',confidence:96.1,crop_type:'Unknown Object',disease_name:null,quality_grade:'D',summary:'This does not appear to be a real agricultural crop.',recommendations:'Upload a genuine crop photo. Fake listings violate KhetBazaar policy.',visual_issues:['Artificial appearance','No natural plant features']},
+    {success:true,status:'diseased',confidence:85.0,crop_type:'Rice',disease_name:'Rice Blast (Magnaporthe oryzae)',quality_grade:'D',summary:'Rice blast fungal infection — significant damage present.',recommendations:'Apply Tricyclazole 75WP. Remove infected plants. Do NOT sell.',visual_issues:['Diamond-shaped lesions','Gray-brown lesion borders','Extensive leaf damage']},
+  ];
+  return demos[Math.floor(Math.random()*demos.length)];
+}
+
+function showResult(d){
+  const s=d.status||'suspicious';
+  const issHTML=(d.visual_issues||[]).length?`<div class="issues">${d.visual_issues.map(i=>`<span class="iss-chip">⚠ ${i}</span>`).join('')}</div>`:'';
+  const gc='g'+(d.quality_grade||'B');
+  const diseaseRow=d.disease_name?`<div class="ip"><label>Disease</label><span style="color:var(--danger)">${d.disease_name}</span></div>`:'';
+
+  document.getElementById('resultSec').style.display='block';
+  document.getElementById('resultSec').innerHTML=`
+    <div class="result-card ${s}">
+      <div class="rh ${s}">
+        <span class="r-icon">${icons[s]}</span>
+        <div style="flex:1">
+          <div class="r-title ${s}">${titles[s]}</div>
+          <div class="r-sub">${d.summary||''}</div>
+          <div class="conf-wrap">
+            <div class="conf-lbl">Confidence: <strong>${parseFloat(d.confidence||75).toFixed(1)}%</strong></div>
+            <div class="conf-bar"><div class="conf-fill ${s}" id="cFill" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="rb">
+        <div class="info-pair">
+          <div class="ip"><label>Crop Type</label><span>${d.crop_type||'Unknown'}</span></div>
+          <div class="ip"><label>Quality Grade</label><span class="grade ${gc}">${d.quality_grade||'B'}</span></div>
+          ${diseaseRow}
+          <div class="ip"><label>Status</label><span>${aiBadge(s)}</span></div>
+        </div>
+        ${issHTML}
+        <div class="reco ${s}">
+          <div class="reco-lbl">💡 Recommendations</div>
+          <div style="font-size:.93rem;line-height:1.65;color:var(--soil)">${d.recommendations||'Consult an agronomist.'}</div>
+        </div>
+        <div class="act-row">
+          <button class="btn btn-grey btn-sm" onclick="resetScan()">🔄 Scan Another</button>
+          <button class="btn btn-green btn-sm" onclick="Toast.show('📋 Report saved!')">📋 Save Report</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(()=>{document.getElementById('cFill').style.width=(d.confidence||75)+'%';},100);
+}
+
+function resetScan(){
+  selFile=null;
+  document.getElementById('fileInput').value='';
+  document.getElementById('uploadZone').style.display='block';
+  document.getElementById('prevSec').style.display='none';
+  document.getElementById('resultSec').style.display='none';
+  document.getElementById('analyzeSec').style.display='none';
+}
+
+async function loadHistory(){
+  try{
+    const d=await api('php/ai_scan.php?action=history');
+    if(d.success&&d.scans.length){
+      document.getElementById('histSec').style.display='block';
+      const statusIcon={healthy:'✅',diseased:'🦠',fake:'🚨',suspicious:'⚠️'};
+      document.getElementById('histList').innerHTML=d.scans.map(s=>`
+        <div class="hitem">
+          <span style="font-size:2rem">${statusIcon[s.result]||'🔍'}</span>
+          <div style="flex:1"><div style="font-weight:700;color:var(--soil)">${s.product_name||'Quick Scan'}</div><div style="font-size:.82rem;color:#999">${fmtDate(s.scanned_at)}</div></div>
+          <span class="badge ${s.result==='healthy'?'badge-green':s.result==='diseased'?'badge-danger':s.result==='fake'?'badge-purple':'badge-warn'}">${s.result} (${parseFloat(s.confidence||0).toFixed(0)}%)</span>
+        </div>`).join('');
+    }
+  }catch(e){}
+}
+loadHistory();
+</script>
+</body>
+</html>

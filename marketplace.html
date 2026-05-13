@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marketplace — KhetBazaar</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.mhdr{background:linear-gradient(135deg,var(--leaf),#1a4a1a);color:#fff;padding:44px 5% 56px;}
+.mhdr h1{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:900;margin-bottom:6px;}
+.mhdr p{opacity:.8;}
+.fbar{background:#fff;margin:0 5%;transform:translateY(-22px);border-radius:18px;padding:18px 22px;box-shadow:0 6px 24px rgba(0,0,0,.1);display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.srch{flex:1;min-width:180px;padding:10px 14px;border:2px solid var(--mist);border-radius:10px;font-size:.92rem;font-family:'DM Sans',sans-serif;background:var(--cream);}
+.srch:focus{outline:none;border-color:var(--leaf);}
+.fsel{padding:10px 12px;border:2px solid var(--mist);border-radius:10px;font-size:.88rem;font-family:'DM Sans',sans-serif;background:var(--cream);cursor:pointer;}
+.fsel:focus{outline:none;border-color:var(--leaf);}
+.org-btn{padding:10px 16px;border:2px solid var(--mist);border-radius:10px;cursor:pointer;background:var(--cream);font-size:.88rem;font-weight:600;transition:all .2s;}
+.org-btn.on{border-color:var(--leaf);background:rgba(42,107,42,.08);color:var(--leaf);}
+
+.mcontent{padding:0 5% 60px;}
+.sort-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.sort-row span{color:#888;font-size:.88rem;}
+
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:22px;}
+
+.pcard{background:#fff;border-radius:20px;overflow:hidden;border:1px solid var(--mist);transition:all .3s;cursor:pointer;position:relative;}
+.pcard:hover{transform:translateY(-5px);box-shadow:0 14px 36px rgba(0,0,0,.11);}
+.pimg{height:176px;background:var(--mist);display:flex;align-items:center;justify-content:center;font-size:4rem;position:relative;overflow:hidden;}
+.pimg img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.pimg-emoji{position:relative;z-index:1;}
+.pbadges{position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:4px;z-index:2;}
+.pbody{padding:14px 16px;}
+.pcat{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:#999;font-weight:700;margin-bottom:4px;}
+.pname{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--soil);margin-bottom:4px;}
+.pseller{font-size:.8rem;color:#999;margin-bottom:10px;}
+.pseller b{color:var(--bark);}
+.pfoot{display:flex;justify-content:space-between;align-items:flex-end;}
+.pprice{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;color:var(--leaf);}
+.pprice span{font-size:.78rem;color:#999;font-family:'DM Sans',sans-serif;font-weight:400;}
+.pqty{font-size:.78rem;color:#bbb;}
+.add-btn{background:linear-gradient(135deg,var(--leaf),var(--leafl));color:#fff;border:none;padding:8px 16px;border-radius:20px;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s;}
+.add-btn:hover{transform:scale(1.05);box-shadow:0 4px 12px rgba(42,107,42,.3);}
+
+.empty-state{grid-column:1/-1;text-align:center;padding:80px 20px;color:#999;}
+.empty-state .ei{font-size:3.5rem;margin-bottom:14px;}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">🌾 Khet<b>Bazaar</b></a>
+  <ul class="nav-links">
+    <li><a href="marketplace.html">Shop</a></li>
+    <li><a href="ai_scan.html">AI Scan</a></li>
+  </ul>
+  <div class="nav-end" id="navEnd">
+    <a href="login.html" class="btn btn-outline btn-sm">Login</a>
+    <a href="cart.html" class="btn btn-green btn-sm">🛒 Cart <span class="cart-badge">0</span></a>
+  </div>
+</nav>
+
+<div class="mhdr">
+  <h1>🌾 Fresh Crop Marketplace</h1>
+  <p>Direct from verified Indian farmers — freshest produce, fairest prices</p>
+</div>
+
+<div class="fbar">
+  <input class="srch" id="srch" placeholder="🔍 Search tomatoes, rice, mangoes..." oninput="load()">
+  <select class="fsel" id="catSel" onchange="load()"><option value="">All Categories</option></select>
+  <div class="org-btn" id="orgBtn" onclick="toggleOrg()">🌿 Organic Only</div>
+  <select class="fsel" id="sortSel" onchange="render()">
+    <option value="newest">Newest</option>
+    <option value="price_low">Price ↑</option>
+    <option value="price_high">Price ↓</option>
+  </select>
+</div>
+
+<div class="mcontent">
+  <div class="sort-row">
+    <span id="pcount">Loading...</span>
+  </div>
+  <div class="pgrid" id="grid">
+    <div class="empty-state" style="grid-column:1/-1"><div class="loading-center"><span class="spinner spinner-dark spinner-lg"></span><br>Loading fresh produce...</div></div>
+  </div>
+</div>
+
+<a href="cart.html" class="float-cart"><span>🛒 Cart</span><span class="cnt cart-badge">0</span></a>
+<div id="toast"></div>
+<script src="js/app.js"></script>
+<script>
+const EMOJIS={'Vegetables':'🥦','Fruits':'🍎','Grains & Cereals':'🌾','Pulses & Legumes':'🫘','Spices & Herbs':'🌶️','Dairy Products':'🥛','Flowers':'🌸','Seeds':'🌱'};
+let allP=[], orgOnly=false;
+
+async function loadCats(){
+  try{
+    const d=await api('php/products.php?action=categories');
+    if(d.success){
+      const sel=document.getElementById('catSel');
+      d.categories.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=(EMOJIS[c.name]||'🌿')+' '+c.name;sel.appendChild(o);});
+    }
+  }catch(e){}
+  // Pre-select from URL
+  const cat=new URLSearchParams(location.search).get('cat');
+  if(cat) document.getElementById('catSel').value=cat;
+}
+
+async function load(){
+  const cat=document.getElementById('catSel').value;
+  const q=document.getElementById('srch').value;
+  try{
+    const d=await api(`php/products.php?action=list&cat=${cat}&q=${encodeURIComponent(q)}&organic=${orgOnly?1:''}`);
+    allP=d.success?d.products:demoProducts();
+  }catch(e){ allP=demoProducts(); }
+  render();
+}
+
+function demoProducts(){
+  return [
+    {id:1,name:'Fresh Red Tomatoes',cat_name:'Vegetables',price:35,quantity:500,unit:'kg',is_organic:1,seller_name:'Raman Singh',location:'Dehradun',ai_scan_status:'healthy',image:''},
+    {id:2,name:'Alphonso Mangoes',cat_name:'Fruits',price:250,quantity:200,unit:'kg',is_organic:0,seller_name:'Priya Farm',location:'Ratnagiri',ai_scan_status:'healthy',image:''},
+    {id:3,name:'Basmati Rice',cat_name:'Grains & Cereals',price:85,quantity:1000,unit:'kg',is_organic:0,seller_name:'Punjab Farms',location:'Punjab',ai_scan_status:'healthy',image:''},
+    {id:4,name:'Masoor Dal',cat_name:'Pulses & Legumes',price:95,quantity:300,unit:'kg',is_organic:1,seller_name:'Raj Traders',location:'Lucknow',ai_scan_status:'healthy',image:''},
+    {id:5,name:'Organic Turmeric',cat_name:'Spices & Herbs',price:180,quantity:150,unit:'kg',is_organic:1,seller_name:'Spice Valley',location:'Kerala',ai_scan_status:'healthy',image:''},
+    {id:6,name:'Green Capsicum',cat_name:'Vegetables',price:55,quantity:250,unit:'kg',is_organic:0,seller_name:'HP Farms',location:'Shimla',ai_scan_status:'healthy',image:''},
+    {id:7,name:'Kesar Mango',cat_name:'Fruits',price:200,quantity:180,unit:'kg',is_organic:1,seller_name:'Gujarat Farms',location:'Gujarat',ai_scan_status:'healthy',image:''},
+    {id:8,name:'Wheat Flour (Atta)',cat_name:'Grains & Cereals',price:45,quantity:800,unit:'kg',is_organic:0,seller_name:'Haryana Grains',location:'Haryana',ai_scan_status:'healthy',image:''},
+  ];
+}
+
+function render(){
+  const sorted=[...allP];
+  const s=document.getElementById('sortSel').value;
+  if(s==='price_low')sorted.sort((a,b)=>a.price-b.price);
+  if(s==='price_high')sorted.sort((a,b)=>b.price-a.price);
+  document.getElementById('pcount').textContent=`${sorted.length} product${sorted.length!==1?'s':''} found`;
+  const grid=document.getElementById('grid');
+  if(!sorted.length){grid.innerHTML='<div class="empty-state"><div class="ei">🌾</div><p>No products found. Try different filters.</p></div>';return;}
+  grid.innerHTML=sorted.map(p=>{
+    const em=EMOJIS[p.cat_name]||'🌿';
+    const imgH=p.image?`<img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">`:'';
+    const aiB=p.ai_scan_status==='healthy'?'<span class="badge badge-green">✅ AI Verified</span>':p.ai_scan_status==='diseased'?'<span class="badge badge-danger">🦠 Disease</span>':'';
+    return `<div class="pcard" onclick="viewP(${p.id})">
+      <div class="pimg">${imgH}<span class="pimg-emoji">${p.image?'':em}</span>
+        <div class="pbadges">${p.is_organic==1?'<span class="badge badge-gold">🌿 Organic</span>':''}${aiB}</div>
+      </div>
+      <div class="pbody">
+        <div class="pcat">${p.cat_name||'General'}</div>
+        <div class="pname">${p.name}</div>
+        <div class="pseller">By <b>${p.seller_name||'Farmer'}</b> · 📍 ${p.location||'India'}</div>
+        <div class="pfoot">
+          <div><div class="pprice">${rupee(p.price)}<span>/${p.unit}</span></div><div class="pqty">${p.quantity} ${p.unit} avail.</div></div>
+          <button class="add-btn" onclick="addCart(event,${p.id},'${p.name}')">+ Cart</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleOrg(){
+  orgOnly=!orgOnly;
+  document.getElementById('orgBtn').classList.toggle('on',orgOnly);
+  load();
+}
+
+async function addCart(e,pid,name){
+  e.stopPropagation();
+  const d=await api('php/orders.php',{action:'cart_add',product_id:pid,quantity:1});
+  if(d.success){Toast.show('✅ '+name+' added to cart!');updateCartBadge();}
+  else if(d.redirect){window.location.href='login.html';}
+  else{
+    // Demo: just increment badge
+    Toast.show('🛒 '+name+' added! (Login to save cart)');
+    document.querySelectorAll('.cart-badge').forEach(el=>el.textContent=parseInt(el.textContent||0)+1);
+  }
+}
+
+function viewP(id){ window.location.href='product.html?id='+id; }
+
+loadCats();
+load();
+</script>
+</body>
+</html>

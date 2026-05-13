@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Product Detail — KhetBazaar</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.bc{padding:14px 5%;font-size:.85rem;color:#999;background:#fff;border-bottom:1px solid var(--mist);}
+.bc a{color:var(--leaf);text-decoration:none;} .bc a:hover{text-decoration:underline;}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:40px;padding:40px 5%;max-width:1100px;margin:0 auto;}
+@media(max-width:768px){.layout{grid-template-columns:1fr;}}
+.prod-img-box{background:#fff;border-radius:22px;border:1px solid var(--mist);overflow:hidden;height:380px;display:flex;align-items:center;justify-content:center;font-size:8rem;}
+.prod-img-box img{width:100%;height:100%;object-fit:cover;}
+.prod-info{}
+.prod-cat{font-size:.78rem;text-transform:uppercase;letter-spacing:2px;color:var(--leaf);font-weight:700;margin-bottom:8px;}
+.prod-name{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:var(--soil);margin-bottom:10px;}
+.prod-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.prod-price{font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:900;color:var(--leaf);margin-bottom:6px;}
+.prod-price span{font-size:1rem;color:#999;font-family:'DM Sans',sans-serif;font-weight:400;}
+.prod-qty{font-size:.9rem;color:#888;margin-bottom:24px;}
+.qty-sel{display:flex;align-items:center;gap:14px;margin-bottom:24px;}
+.qbtn{width:36px;height:36px;border:2px solid var(--mist);border-radius:10px;background:#fff;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.qbtn:hover{border-color:var(--leaf);color:var(--leaf);}
+.qnum{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--soil);min-width:32px;text-align:center;}
+.seller-box{background:var(--mist);border-radius:14px;padding:16px 18px;margin-bottom:22px;}
+.seller-box h4{font-weight:700;color:var(--soil);margin-bottom:6px;}
+.seller-box p{font-size:.85rem;color:#888;}
+.desc-box{background:#fff;border:1px solid var(--mist);border-radius:14px;padding:20px;margin-bottom:24px;}
+.desc-box h4{font-weight:700;color:var(--soil);margin-bottom:8px;}
+.desc-box p{font-size:.92rem;color:#666;line-height:1.7;}
+.ai-box{border-radius:14px;padding:16px 18px;margin-bottom:22px;border:1px solid;}
+.ai-box.healthy{background:rgba(42,107,42,.06);border-color:rgba(42,107,42,.2);}
+.ai-box.diseased{background:rgba(229,57,53,.06);border-color:rgba(229,57,53,.2);}
+.ai-box h4{font-weight:700;color:var(--soil);margin-bottom:4px;}
+.ai-box p{font-size:.85rem;color:#777;}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;}
+.reviews-sec{padding:0 5% 60px;max-width:1100px;margin:0 auto;}
+.reviews-sec h2{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:var(--soil);margin-bottom:18px;}
+.rev-card{background:#fff;border:1px solid var(--mist);border-radius:14px;padding:16px 20px;margin-bottom:12px;}
+.rev-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.rev-name{font-weight:700;color:var(--soil);}
+.stars{color:var(--sun);}
+.rev-text{font-size:.9rem;color:#666;line-height:1.6;}
+.empty-rev{text-align:center;padding:30px;color:#999;}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">🌾 Khet<b>Bazaar</b></a>
+  <ul class="nav-links"><li><a href="marketplace.html">Marketplace</a></li></ul>
+  <div class="nav-end" id="navEnd">
+    <a href="login.html" class="btn btn-outline btn-sm">Login</a>
+    <a href="cart.html" class="btn btn-green btn-sm">🛒 Cart <span class="cart-badge">0</span></a>
+  </div>
+</nav>
+
+<div class="bc"><a href="index.html">Home</a> › <a href="marketplace.html">Marketplace</a> › <span id="bcName">Product</span></div>
+
+<div id="loadingState" class="loading-center" style="padding:80px"><span class="spinner spinner-dark spinner-lg"></span><br>Loading product...</div>
+<div id="productContent" style="display:none">
+  <div class="layout">
+    <div>
+      <div class="prod-img-box" id="prodImgBox"><span id="prodEmoji">🌿</span></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-cat" id="prodCat">Category</div>
+      <div class="prod-name" id="prodName">Loading...</div>
+      <div class="prod-badges" id="prodBadges"></div>
+      <div class="prod-price" id="prodPrice">₹–<span id="prodUnit">/kg</span></div>
+      <div class="prod-qty" id="prodQty">Available: –</div>
+      <div class="desc-box"><h4>📋 Description</h4><p id="prodDesc">–</p></div>
+      <div class="ai-box healthy" id="aiBox">
+        <h4>🤖 AI Scan Result</h4>
+        <p id="aiNote">Not yet scanned</p>
+      </div>
+      <div class="seller-box">
+        <h4>👨‍🌾 Sold by <span id="sellerName">–</span></h4>
+        <p id="sellerPhone">📞 –</p>
+        <p id="sellerAddr">📍 –</p>
+      </div>
+      <div class="qty-sel">
+        <button class="qbtn" onclick="changeQty(-1)">−</button>
+        <span class="qnum" id="selQty">1</span>
+        <button class="qbtn" onclick="changeQty(1)">+</button>
+        <span style="font-size:.85rem;color:#999">units</span>
+      </div>
+      <div class="cta-row">
+        <button class="btn btn-green btn-lg" id="addCartBtn" onclick="addToCart()">🛒 Add to Cart</button>
+        <a href="cart.html" class="btn btn-outline btn-lg">View Cart</a>
+      </div>
+    </div>
+  </div>
+  <div class="reviews-sec">
+    <h2>⭐ Customer Reviews</h2>
+    <div id="reviewsList"></div>
+  </div>
+</div>
+
+<a href="cart.html" class="float-cart"><span>🛒 Cart</span><span class="cnt cart-badge">0</span></a>
+<div id="toast"></div>
+<script src="js/app.js"></script>
+<script>
+const EMOJIS={'Vegetables':'🥦','Fruits':'🍎','Grains & Cereals':'🌾','Pulses & Legumes':'🫘','Spices & Herbs':'🌶️','Dairy Products':'🥛','Flowers':'🌸','Seeds':'🌱'};
+const pid=new URLSearchParams(location.search).get('id');
+let qty=1, product=null;
+
+async function load(){
+  if(!pid){window.location.href='marketplace.html';return;}
+  try{
+    const d=await api('php/products.php?action=get&id='+pid);
+    if(d.success){product=d.product;render(product);}
+    else renderDemo();
+  }catch(e){renderDemo();}
+}
+
+function renderDemo(){
+  product={id:1,name:'Fresh Red Tomatoes',cat_name:'Vegetables',price:35,quantity:500,unit:'kg',description:'Organically grown red tomatoes, farm fresh picked daily. Rich in lycopene, perfect for cooking and salads.',is_organic:1,seller_name:'Raman Singh',seller_phone:'9876543210',seller_addr:'Dehradun, Uttarakhand',ai_scan_status:'healthy',ai_scan_notes:'Excellent quality. No disease detected.',ai_confidence:94.5,image:'',reviews:[]};
+  render(product);
+}
+
+function render(p){
+  document.getElementById('loadingState').style.display='none';
+  document.getElementById('productContent').style.display='block';
+  document.title=p.name+' — KhetBazaar';
+  document.getElementById('bcName').textContent=p.name;
+  document.getElementById('prodCat').textContent=p.cat_name||'General';
+  document.getElementById('prodName').textContent=p.name;
+  document.getElementById('prodPrice').innerHTML=rupee(p.price)+'<span id="prodUnit">/'+p.unit+'</span>';
+  document.getElementById('prodQty').textContent='Available: '+p.quantity+' '+p.unit;
+  document.getElementById('prodDesc').textContent=p.description||'No description provided.';
+  document.getElementById('sellerName').textContent=p.seller_name||'–';
+  document.getElementById('sellerPhone').textContent='📞 '+(p.seller_phone||'Not provided');
+  document.getElementById('sellerAddr').textContent='📍 '+(p.seller_addr||p.location||'India');
+  const em=EMOJIS[p.cat_name]||'🌿';
+  document.getElementById('prodEmoji').textContent=em;
+  if(p.image){
+    const img=document.createElement('img');img.src=p.image;img.alt=p.name;
+    document.getElementById('prodImgBox').innerHTML='';document.getElementById('prodImgBox').appendChild(img);
+  }
+  // Badges
+  let badges='';
+  if(p.is_organic==1)badges+='<span class="badge badge-gold">🌿 Organic</span>';
+  badges+=aiBadge(p.ai_scan_status);
+  document.getElementById('prodBadges').innerHTML=badges;
+  // AI box
+  const aiBox=document.getElementById('aiBox');
+  aiBox.className='ai-box '+(p.ai_scan_status||'healthy');
+  document.getElementById('aiNote').textContent=p.ai_scan_notes||(p.ai_scan_status==='not_scanned'?'This crop has not been scanned yet.':'AI scan complete — '+p.ai_scan_status);
+  if(p.ai_confidence>0){document.getElementById('aiNote').textContent+=' (Confidence: '+parseFloat(p.ai_confidence).toFixed(1)+'%)';}
+  // Reviews
+  const rl=document.getElementById('reviewsList');
+  if(p.reviews&&p.reviews.length){
+    rl.innerHTML=p.reviews.map(r=>`
+      <div class="rev-card">
+        <div class="rev-top">
+          <span class="rev-name">${r.buyer_name||'Buyer'}</span>
+          <span class="stars">${'★'.repeat(r.rating||5)}${'☆'.repeat(5-(r.rating||5))}</span>
+        </div>
+        <p class="rev-text">${r.comment||'Great product!'}</p>
+      </div>`).join('');
+  }else{rl.innerHTML='<div class="empty-rev">⭐ No reviews yet. Be the first to review!</div>';}
+  updateCartBadge();
+}
+
+function changeQty(delta){
+  const max=product?.quantity||999;
+  qty=Math.min(Math.max(1,qty+delta),max);
+  document.getElementById('selQty').textContent=qty;
+}
+
+async function addToCart(){
+  const btn=document.getElementById('addCartBtn');
+  btn.disabled=true;btn.textContent='Adding...';
+  const d=await api('php/orders.php',{action:'cart_add',product_id:pid,quantity:qty});
+  if(d.success){Toast.show('✅ Added to cart!');updateCartBadge();}
+  else if(d.redirect){window.location.href='login.html';}
+  else{Toast.show('🛒 Added! (Login to save cart)');document.querySelectorAll('.cart-badge').forEach(el=>el.textContent=parseInt(el.textContent||0)+1);}
+  btn.disabled=false;btn.textContent='🛒 Add to Cart';
+}
+
+load();
+</script>
+</body>
+</html>

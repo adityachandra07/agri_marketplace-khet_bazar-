@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login — KhetBazaar</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{background:linear-gradient(135deg,#1a3a1a 0%,#2D1B0E 45%,#1a3a1a 100%);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.box{background:var(--cream);border-radius:28px;width:100%;max-width:450px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45);animation:slideUp .5s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.hdr{background:linear-gradient(135deg,var(--leaf),#1a4a1a);padding:38px 40px 30px;text-align:center;position:relative;}
+.hdr::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:28px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hdr-logo{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:900;color:var(--gold);margin-bottom:6px;}
+.hdr p{color:rgba(255,255,255,.7);font-size:.9rem;}
+.body{padding:30px 38px 38px;}
+
+.role-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:26px;}
+.rtab{padding:12px 8px;border:2px solid var(--mist);border-radius:14px;background:#fff;cursor:pointer;text-align:center;transition:all .25s;font-weight:600;font-size:.82rem;color:#999;}
+.rtab .ri{font-size:1.5rem;display:block;margin-bottom:4px;}
+.rtab.active{border-color:var(--leaf);background:rgba(42,107,42,.08);color:var(--leaf);transform:translateY(-2px);box-shadow:0 4px 12px rgba(42,107,42,.18);}
+.rtab:hover:not(.active){border-color:#ccc;}
+
+.demo-box{background:rgba(42,107,42,.06);border:1px solid rgba(42,107,42,.18);border-radius:12px;padding:14px 16px;margin-bottom:20px;}
+.demo-box p{font-size:.75rem;font-weight:700;color:var(--leaf);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.drow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed rgba(42,107,42,.15);font-size:.82rem;color:var(--soil);}
+.drow:last-child{border:none;}
+.dfill{background:var(--leaf);color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:.75rem;cursor:pointer;font-weight:600;transition:all .2s;}
+.dfill:hover{background:var(--leafl);}
+
+.lbtn{width:100%;padding:14px;background:linear-gradient(135deg,var(--leaf),var(--leafl));color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s;font-family:'DM Sans',sans-serif;margin-top:6px;}
+.lbtn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(42,107,42,.4);}
+.lbtn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.foot-link{text-align:center;margin-top:20px;font-size:.9rem;color:#888;}
+.foot-link a{color:var(--leaf);font-weight:600;text-decoration:none;}
+.back{position:fixed;top:20px;left:20px;}
+.back a{color:rgba(255,255,255,.7);text-decoration:none;font-size:.9rem;}
+.back a:hover{color:var(--gold);}
+</style>
+</head>
+<body>
+<div class="back"><a href="index.html">← Home</a></div>
+<div class="box">
+  <div class="hdr">
+    <div class="hdr-logo">🌾 KhetBazaar</div>
+    <p>Sign in to your account</p>
+  </div>
+  <div class="body">
+    <!-- Role tabs -->
+    <div class="role-tabs">
+      <div class="rtab active" data-role="buyer" onclick="pickRole('buyer',this)"><span class="ri">🛒</span>Buyer</div>
+      <div class="rtab" data-role="seller" onclick="pickRole('seller',this)"><span class="ri">👨‍🌾</span>Seller</div>
+      <div class="rtab" data-role="admin" onclick="pickRole('admin',this)"><span class="ri">🛡️</span>Admin</div>
+    </div>
+
+    <!-- Demo accounts -->
+    <div class="demo-box">
+      <p>🧪 Demo Accounts — password: <strong>password</strong></p>
+      <div class="drow"><span>buyer@khetbazaar.com</span><button class="dfill" onclick="fill('buyer@khetbazaar.com','password','buyer')">Fill</button></div>
+      <div class="drow"><span>seller@khetbazaar.com</span><button class="dfill" onclick="fill('seller@khetbazaar.com','password','seller')">Fill</button></div>
+      <div class="drow"><span>admin@khetbazaar.com</span><button class="dfill" onclick="fill('admin@khetbazaar.com','password','admin')">Fill</button></div>
+    </div>
+
+    <div class="alert" id="alertBox"></div>
+
+    <form id="loginForm" onsubmit="doLogin(event)">
+      <input type="hidden" id="roleField" value="buyer">
+      <div class="form-group"><label>📧 Email Address</label><input class="form-ctrl" type="email" id="emailF" placeholder="you@example.com" required></div>
+      <div class="form-group"><label>🔒 Password</label><input class="form-ctrl" type="password" id="passF" placeholder="Enter password" required></div>
+      <button type="submit" class="lbtn" id="loginBtn"><span id="btnTxt">🔐 Login to KhetBazaar</span></button>
+    </form>
+
+    <div class="foot-link" style="margin-top:18px">No account? <a href="register.html">Register Free</a></div>
+    <div class="foot-link" style="margin-top:8px"><a href="index.html">← Back to Home</a></div>
+  </div>
+</div>
+
+<script>
+let selRole = 'buyer';
+
+// Pre-pick role from URL
+const urlR = new URLSearchParams(location.search).get('role');
+if(urlR) document.querySelector(`[data-role="${urlR}"]`)?.click();
+
+function pickRole(r, el){
+  selRole = r;
+  document.getElementById('roleField').value = r;
+  document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function fill(email, pass, role){
+  document.getElementById('emailF').value = email;
+  document.getElementById('passF').value  = pass;
+  document.querySelector(`[data-role="${role}"]`).click();
+  showAlert('alertBox','ok','Demo credentials filled — click Login!');
+}
+
+function showAlert(id, type, msg){
+  const el = document.getElementById(id);
+  el.className = `alert alert-${type} show`;
+  el.textContent = msg;
+}
+
+async function doLogin(e){
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  const txt = document.getElementById('btnTxt');
+  txt.innerHTML = '<span class="spinner"></span> Signing in...';
+  btn.disabled = true;
+
+  try {
+    const fd = new FormData();
+    fd.append('action','login');
+    fd.append('email', document.getElementById('emailF').value);
+    fd.append('password', document.getElementById('passF').value);
+    fd.append('role', selRole);
+
+    const res = await fetch('php/auth.php',{method:'POST',body:fd});
+    const d   = await res.json();
+
+    if(d.success){
+      showAlert('alertBox','ok','✅ '+d.message);
+      txt.innerHTML = '✅ Redirecting...';
+      setTimeout(() => window.location.href = d.redirect, 700);
+    } else {
+      showAlert('alertBox','err','❌ '+d.message);
+      txt.innerHTML = '🔐 Login to KhetBazaar';
+      btn.disabled = false;
+    }
+  } catch(err){
+    // Demo fallback
+    const dest = {admin:'admin.html',seller:'seller.html',buyer:'marketplace.html'};
+    showAlert('alertBox','ok','✅ Demo login! Connecting to backend...');
+    txt.innerHTML = '✅ Redirecting...';
+    setTimeout(() => window.location.href = dest[selRole]||'marketplace.html', 900);
+  }
+}
+</script>
+</body>
+</html>

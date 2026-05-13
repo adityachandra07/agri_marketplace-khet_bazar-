@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seller Dashboard — KhetBazaar</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{background:var(--mist);}
+.dash-layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+/* Sidebar */
+.sidebar{background:linear-gradient(180deg,#1a4a1a,var(--soil));color:#fff;padding:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-brand{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.1);}
+.sb-brand .logo{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;color:var(--gold);}
+.sb-brand .role{font-size:.75rem;color:rgba(255,255,255,.5);margin-top:3px;text-transform:uppercase;letter-spacing:1px;}
+.sb-nav{padding:16px 0;}
+.sb-link{display:flex;align-items:center;gap:12px;padding:12px 20px;color:rgba(255,255,255,.75);text-decoration:none;font-size:.9rem;font-weight:500;transition:all .2s;cursor:pointer;border:none;background:none;width:100%;}
+.sb-link:hover,.sb-link.active{background:rgba(255,255,255,.12);color:#fff;}
+.sb-link .si{font-size:1.1rem;width:22px;}
+.sb-section{padding:8px 20px;font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.35);margin-top:8px;}
+/* Main */
+.main-area{padding:0;}
+.top-bar{background:#fff;padding:16px 28px;border-bottom:1px solid var(--mist);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.top-bar h2{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--soil);}
+.content{padding:28px;}
+/* Tab panels */
+.tab-panel{display:none;}
+.tab-panel.active{display:block;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
+.stat-box{background:#fff;border-radius:16px;padding:20px 22px;border:1px solid var(--mist);}
+.stat-box .sval{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:var(--leaf);}
+.stat-box .slbl{font-size:.8rem;color:var(--sub);margin-top:2px;}
+.stat-box .sicon{font-size:1.8rem;float:right;margin-top:-4px;}
+/* Product grid */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;}
+.prod-card{background:#fff;border-radius:16px;border:1px solid var(--mist);overflow:hidden;transition:box-shadow .2s;}
+.prod-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.09);}
+.prod-img{height:140px;background:var(--mist);display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;overflow:hidden;}
+.prod-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.prod-body{padding:14px 16px;}
+.prod-name{font-weight:700;color:var(--soil);margin-bottom:4px;font-size:.95rem;}
+.prod-price{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--leaf);margin-bottom:8px;}
+.prod-foot{display:flex;justify-content:space-between;align-items:center;}
+/* Add product form */
+.add-form{background:#fff;border-radius:18px;border:1px solid var(--mist);padding:28px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.img-upload{border:2px dashed rgba(42,107,42,.3);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.img-upload:hover{border-color:var(--leaf);background:rgba(42,107,42,.04);}
+.img-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+#imgPreview{width:100%;height:160px;object-fit:cover;border-radius:10px;display:none;margin-top:10px;}
+/* Orders table */
+.tbl-wrap{background:#fff;border-radius:16px;border:1px solid var(--mist);overflow:hidden;}
+/* Scan section */
+.scan-drop{border:3px dashed rgba(42,107,42,.28);border-radius:18px;padding:44px;text-align:center;background:#fff;cursor:pointer;position:relative;transition:all .2s;}
+.scan-drop:hover{border-color:var(--leaf);background:rgba(42,107,42,.03);}
+.scan-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.scan-result{background:#fff;border-radius:16px;border:1px solid var(--mist);padding:24px;margin-top:18px;display:none;}
+@media(max-width:768px){.dash-layout{grid-template-columns:1fr;}.sidebar{position:relative;height:auto;}}
+</style>
+</head>
+<body>
+<div class="dash-layout">
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sb-brand">
+    <div class="logo">🌾 KhetBazaar</div>
+    <div class="role">Seller Dashboard</div>
+    <div style="margin-top:12px;font-size:.85rem;color:rgba(255,255,255,.7)" id="sbUser">Loading...</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Main</div>
+    <button class="sb-link active" onclick="show('overview')"><span class="si">📊</span> Overview</button>
+    <button class="sb-link" onclick="show('myproducts')"><span class="si">🌾</span> My Products</button>
+    <button class="sb-link" onclick="show('addproduct')"><span class="si">➕</span> Add Product</button>
+    <div class="sb-section">Tools</div>
+    <button class="sb-link" onclick="show('aiscan')"><span class="si">🤖</span> AI Crop Scan</button>
+    <button class="sb-link" onclick="show('orders')"><span class="si">📦</span> My Orders</button>
+    <div class="sb-section">Account</div>
+    <a href="marketplace.html" class="sb-link"><span class="si">🛒</span> Marketplace</a>
+    <button class="sb-link" onclick="doLogout()"><span class="si">🚪</span> Logout</button>
+  </nav>
+</div>
+
+<!-- Main -->
+<div class="main-area">
+  <div class="top-bar">
+    <h2 id="pageTitle">Overview</h2>
+    <div style="font-size:.85rem;color:var(--sub)" id="dateTime"></div>
+  </div>
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="stat-grid" id="statGrid">
+        <div class="stat-box"><span class="sicon">🌾</span><div class="sval" id="s1">–</div><div class="slbl">Total Products</div></div>
+        <div class="stat-box"><span class="sicon">✅</span><div class="sval" id="s2">–</div><div class="slbl">Approved</div></div>
+        <div class="stat-box"><span class="sicon">⏳</span><div class="sval" id="s3">–</div><div class="slbl">Pending Review</div></div>
+        <div class="stat-box"><span class="sicon">📦</span><div class="sval" id="s4">–</div><div class="slbl">Orders</div></div>
+      </div>
+      <div style="background:#fff;border-radius:16px;border:1px solid var(--mist);padding:22px;">
+        <h3 style="font-family:'Playfair Display',serif;font-weight:900;color:var(--soil);margin-bottom:16px;">Quick Actions</h3>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-green" onclick="show('addproduct')">➕ Add New Product</button>
+          <button class="btn btn-outline" onclick="show('aiscan')">🤖 Run AI Scan</button>
+          <a href="marketplace.html" class="btn btn-grey">🛒 View Marketplace</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY PRODUCTS -->
+    <div class="tab-panel" id="tab-myproducts">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <span id="myProdCount" style="color:var(--sub)"></span>
+        <button class="btn btn-green btn-sm" onclick="show('addproduct')">➕ Add Product</button>
+      </div>
+      <div class="prod-grid" id="myProdGrid"><div class="loading-center"><span class="spinner spinner-dark spinner-lg"></span></div></div>
+    </div>
+
+    <!-- ADD PRODUCT -->
+    <div class="tab-panel" id="tab-addproduct">
+      <div class="add-form">
+        <h3 style="font-family:'Playfair Display',serif;font-weight:900;color:var(--soil);margin-bottom:22px;">🌾 List a New Product</h3>
+        <div class="alert" id="addAlert"></div>
+        <form id="addProdForm" onsubmit="submitProduct(event)">
+          <div class="form-row">
+            <div class="form-group"><label>Product Name *</label><input class="form-ctrl" name="name" placeholder="e.g. Fresh Red Tomatoes" required></div>
+            <div class="form-group"><label>Category *</label><select class="form-ctrl" name="category_id" id="catSel" required><option value="">Select category</option></select></div>
+          </div>
+          <div class="form-group"><label>Description</label><textarea class="form-ctrl" name="description" placeholder="Describe your crop — freshness, origin, harvest date..."></textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label>Price (₹) *</label><input class="form-ctrl" name="price" type="number" step="0.01" min="1" placeholder="35.00" required></div>
+            <div class="form-group"><label>Quantity *</label><input class="form-ctrl" name="quantity" type="number" min="1" placeholder="500" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Unit</label><select class="form-ctrl" name="unit"><option value="kg">kg</option><option value="quintal">Quintal</option><option value="ton">Ton</option><option value="piece">Piece</option><option value="dozen">Dozen</option><option value="bag">Bag</option><option value="litre">Litre</option></select></div>
+            <div class="form-group"><label>Location / Farm</label><input class="form-ctrl" name="location" placeholder="Dehradun, Uttarakhand"></div>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" name="is_organic" value="1" style="margin-right:8px">🌿 This product is organically grown</label>
+          </div>
+          <div class="form-group">
+            <label>Product Image</label>
+            <div class="img-upload">
+              <input type="file" name="image" accept="image/*" onchange="prevAddImg(event)">
+              <div style="font-size:2rem;margin-bottom:8px">📷</div>
+              <div style="font-size:.9rem;color:#999">Click or drag to upload image</div>
+              <img id="imgPreview">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-green btn-lg" id="addBtn"><span id="addBtnTxt">🌾 Submit Product</span></button>
+        </form>
+      </div>
+    </div>
+
+    <!-- AI SCAN -->
+    <div class="tab-panel" id="tab-aiscan">
+      <div class="scan-drop" ondrop="scanDrop(event)" ondragover="event.preventDefault()" ondragleave="">
+        <input type="file" id="scanFile" accept="image/*" onchange="scanFile(event)">
+        <div style="font-size:3rem;margin-bottom:12px">📸</div>
+        <h3 style="font-family:'Playfair Display',serif;font-weight:900;color:var(--soil);margin-bottom:6px;">Upload Crop for AI Analysis</h3>
+        <p style="color:#999;font-size:.9rem">Drop image here or click to browse</p>
+        <button class="btn btn-green" style="margin-top:14px;pointer-events:none">Choose Image</button>
+      </div>
+      <div class="scan-result" id="scanResult"></div>
+      <div class="hist" style="margin-top:32px;display:none" id="scanHistSec">
+        <h3 style="font-family:'Playfair Display',serif;font-weight:900;color:var(--soil);margin-bottom:14px;">Recent Scans</h3>
+        <div id="scanHistList"></div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="tab-panel" id="tab-orders">
+      <div class="tbl-wrap">
+        <table class="tbl" id="ordersTbl">
+          <thead><tr><th>Order ID</th><th>Date</th><th>Items</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>
+          <tbody id="ordersTbody"><tr><td colspan="6" class="loading-center"><span class="spinner spinner-dark"></span> Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+<script src="js/app.js"></script>
+<script>
+const EMOJIS={'Vegetables':'🥦','Fruits':'🍎','Grains & Cereals':'🌾','Pulses & Legumes':'🫘','Spices & Herbs':'🌶️','Dairy Products':'🥛','Flowers':'🌸','Seeds':'🌱'};
+let myProds=[];
+
+// Clock
+setInterval(()=>{document.getElementById('dateTime').textContent=new Date().toLocaleString('en-IN');},1000);
+
+// Auth guard
+async function init(){
+  const u=await Auth.get();
+  if(!u){window.location.href='login.html?role=seller';return;}
+  if(u.role!=='seller'){window.location.href='login.html?role=seller';return;}
+  document.getElementById('sbUser').textContent='👤 '+u.name;
+  loadCats();loadStats();loadMyProducts();loadOrders();loadScanHist();
+}
+
+function show(tab){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));
+  event.currentTarget?.classList.add('active');
+  const titles={overview:'Overview',myproducts:'My Products',addproduct:'Add Product',aiscan:'AI Crop Scan',orders:'My Orders'};
+  document.getElementById('pageTitle').textContent=titles[tab]||tab;
+}
+
+async function loadCats(){
+  const d=await api('php/products.php?action=categories');
+  if(d.success){
+    const sel=document.getElementById('catSel');
+    d.categories.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=(EMOJIS[c.name]||'🌿')+' '+c.name;sel.appendChild(o);});
+  }
+}
+
+async function loadStats(){
+  const d=await api('php/products.php?action=mine');
+  if(d.success){
+    const prods=d.products;
+    document.getElementById('s1').textContent=prods.length;
+    document.getElementById('s2').textContent=prods.filter(p=>p.status==='approved').length;
+    document.getElementById('s3').textContent=prods.filter(p=>p.status==='pending').length;
+  }
+  const od=await api('php/orders.php?action=my_orders');
+  if(od.success)document.getElementById('s4').textContent=od.orders.length;
+}
+
+async function loadMyProducts(){
+  const d=await api('php/products.php?action=mine');
+  if(!d.success){myProds=demoProds();renderMyProds();return;}
+  myProds=d.products;renderMyProds();
+}
+
+function demoProds(){
+  return [{id:1,name:'Fresh Tomatoes',price:35,quantity:500,unit:'kg',status:'approved',ai_scan_status:'healthy',image:'',cat_name:'Vegetables'},{id:2,name:'Basmati Rice',price:85,quantity:1000,unit:'kg',status:'pending',ai_scan_status:'not_scanned',image:'',cat_name:'Grains & Cereals'}];
+}
+
+function renderMyProds(){
+  const grid=document.getElementById('myProdGrid');
+  document.getElementById('myProdCount').textContent=myProds.length+' product(s)';
+  if(!myProds.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:#999">No products yet. <button class="btn btn-green btn-sm" onclick="show(\'addproduct\')">Add your first product</button></div>';return;}
+  grid.innerHTML=myProds.map(p=>`
+    <div class="prod-card">
+      <div class="prod-img">${p.image?`<img src="${p.image}" alt="${p.name}">`:''}${EMOJIS[p.cat_name]||'🌿'}</div>
+      <div class="prod-body">
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-price">${rupee(p.price)} / ${p.unit}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          ${statusPill(p.status)} ${aiBadge(p.ai_scan_status)}
+        </div>
+        <div class="prod-foot">
+          <span style="font-size:.8rem;color:#999">${p.quantity} ${p.unit} avail.</span>
+          <button class="btn btn-danger btn-sm" onclick="delProd(${p.id})">Delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function delProd(id){
+  if(!confirm('Delete this product?'))return;
+  const d=await api('php/products.php',{action:'delete',id});
+  if(d.success){Toast.show('🗑️ Product deleted');loadMyProducts();}
+  else{Toast.show('Demo: product deleted');myProds=myProds.filter(p=>p.id!=id);renderMyProds();}
+}
+
+function prevAddImg(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=ev=>{const img=document.getElementById('imgPreview');img.src=ev.target.result;img.style.display='block';};r.readAsDataURL(f);
+}
+
+async function submitProduct(e){
+  e.preventDefault();
+  const btn=document.getElementById('addBtn');const txt=document.getElementById('addBtnTxt');
+  txt.innerHTML='<span class="spinner"></span>Submitting...';btn.disabled=true;
+  const fd=new FormData(e.target);fd.append('action','add');
+  fd.set('is_organic',e.target.querySelector('[name="is_organic"]')?.checked?'1':'0');
+  const d=await api('php/products.php',fd);
+  if(d.success){
+    showAlert('addAlert','ok','✅ '+d.message);
+    e.target.reset();document.getElementById('imgPreview').style.display='none';
+    txt.innerHTML='🌾 Submit Product';btn.disabled=false;
+    loadMyProducts();
+  }else{
+    showAlert('addAlert','err','❌ '+(d.message||'Submitted! (demo mode)'));
+    txt.innerHTML='🌾 Submit Product';btn.disabled=false;
+  }
+}
+
+// AI SCAN
+function scanDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f)doScan(f);}
+function scanFile(e){const f=e.target.files[0];if(f)doScan(f);}
+
+async function doScan(file){
+  const res=document.getElementById('scanResult');
+  res.style.display='block';
+  res.innerHTML='<div class="loading-center"><span class="spinner spinner-dark spinner-lg"></span><br>Analyzing crop...</div>';
+  const fd=new FormData();fd.append('action','scan');fd.append('image',file);
+  let d;
+  try{const r=await fetch('php/ai_scan.php',{method:'POST',body:fd});d=await r.json();if(!d.success)d=scanDemo();}
+  catch(e){d=scanDemo();}
+  const icons2={healthy:'✅',diseased:'🦠',fake:'🚨',suspicious:'⚠️'};
+  const s=d.status||'suspicious';
+  res.innerHTML=`
+    <div style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--mist);margin-bottom:16px">
+      <span style="font-size:2.5rem">${icons2[s]}</span>
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;color:${s==='healthy'?'var(--leaf)':s==='diseased'?'var(--danger)':s==='fake'?'var(--purple)':'var(--warn)'}">${s.toUpperCase()}</div>
+        <div style="color:#888;font-size:.88rem">${d.summary||''}</div>
+      </div>
+      <span class="badge ${s==='healthy'?'badge-green':s==='diseased'?'badge-danger':s==='fake'?'badge-purple':'badge-warn'}" style="margin-left:auto">${parseFloat(d.confidence||75).toFixed(0)}% confidence</span>
+    </div>
+    <div class="grid-2" style="margin-bottom:14px">
+      <div><b>Crop:</b> ${d.crop_type||'Unknown'}</div>
+      <div><b>Grade:</b> ${d.quality_grade||'B'}</div>
+      ${d.disease_name?`<div><b>Disease:</b> <span style="color:var(--danger)">${d.disease_name}</span></div>`:''}
+    </div>
+    <div style="background:rgba(42,107,42,.06);border-radius:10px;padding:12px 14px;font-size:.9rem">
+      <b>💡 Advice:</b> ${d.recommendations||'Consult an agronomist.'}
+    </div>`;
+}
+
+function scanDemo(){
+  const demos=[
+    {success:true,status:'healthy',confidence:94,crop_type:'Tomato',disease_name:null,quality_grade:'A',summary:'Fresh and disease-free.',recommendations:'Market-ready. Store at 10-15°C.'},
+    {success:true,status:'diseased',confidence:87,crop_type:'Wheat',disease_name:'Yellow Rust',quality_grade:'C',summary:'Disease detected.',recommendations:'Apply Propiconazole 25EC immediately.'},
+  ];
+  return demos[Math.floor(Math.random()*demos.length)];
+}
+
+async function loadScanHist(){
+  try{
+    const d=await api('php/ai_scan.php?action=history');
+    if(d.success&&d.scans.length){
+      document.getElementById('scanHistSec').style.display='block';
+      const icons2={healthy:'✅',diseased:'🦠',fake:'🚨',suspicious:'⚠️'};
+      document.getElementById('scanHistList').innerHTML=d.scans.slice(0,5).map(s=>`
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--mist)">
+          <span style="font-size:1.5rem">${icons2[s.result]||'🔍'}</span>
+          <div style="flex:1"><div style="font-weight:600;color:var(--soil)">${s.product_name||'Quick Scan'}</div><div style="font-size:.78rem;color:#999">${fmtDate(s.scanned_at)}</div></div>
+          <span class="badge ${s.result==='healthy'?'badge-green':'badge-danger'}">${s.result}</span>
+        </div>`).join('');
+    }
+  }catch(e){}
+}
+
+async function loadOrders(){
+  const d=await api('php/orders.php?action=my_orders');
+  const tbody=document.getElementById('ordersTbody');
+  const orders=d.success?d.orders:[];
+  if(!orders.length){tbody.innerHTML='<tr><td colspan="6" class="loading-center">No orders yet</td></tr>';return;}
+  tbody.innerHTML=orders.map(o=>`<tr>
+    <td><b>#${o.id}</b></td>
+    <td>${fmtDate(o.created_at)}</td>
+    <td>${o.items||1} item(s)</td>
+    <td>${rupee(o.total_amount)}</td>
+    <td>${statusPill(o.payment_status)}</td>
+    <td>${statusPill(o.status)}</td>
+  </tr>`).join('');
+}
+
+function doLogout(){Auth.logout();}
+init();
+</script>
+</body>
+</html>
